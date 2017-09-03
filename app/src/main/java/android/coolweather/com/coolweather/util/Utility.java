@@ -3,7 +3,10 @@ package android.coolweather.com.coolweather.util;
 import android.coolweather.com.coolweather.db.City;
 import android.coolweather.com.coolweather.db.County;
 import android.coolweather.com.coolweather.db.Province;
+import android.coolweather.com.coolweather.gson.Weather;
 import android.text.TextUtils;
+
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +37,7 @@ public class Utility {
         return false;
     }
 
-    public static boolean handleCityRespose(String respose,int provinceId) {
+    public static boolean handleCityRespose(String respose, int provinceId) {
         if (!TextUtils.isEmpty(respose)) {
             try {
                 JSONArray allCities = new JSONArray(respose);
@@ -55,7 +58,7 @@ public class Utility {
         return false;
     }
 
-    public static boolean handleCountyRespose(String respose,int cityId) {
+    public static boolean handleCountyRespose(String respose, int cityId) {
         if (!TextUtils.isEmpty(respose)) {
             try {
                 JSONArray allCounties = new JSONArray(respose);
@@ -63,7 +66,7 @@ public class Utility {
                     JSONObject CountyOBJ = allCounties.getJSONObject(i);
                     County county = new County();
                     county.setCountyName(CountyOBJ.getString("name"));
-                    county.setWeatherId(CountyOBJ.getString("id"));
+                    county.setWeatherId(CountyOBJ.getString("weather_id"));
                     county.setCityId(cityId);
                     county.save();
                 }
@@ -74,5 +77,17 @@ public class Utility {
 
         }
         return false;
+    }
+
+    public static Weather handleWeatherResponse(String respose) {
+        try {
+            JSONObject jsonObject = new JSONObject(respose);
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather");
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent, Weather.class);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
