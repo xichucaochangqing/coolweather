@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.coolweather.com.coolweather.db.City;
 import android.coolweather.com.coolweather.db.County;
 import android.coolweather.com.coolweather.db.Province;
+import android.coolweather.com.coolweather.gson.Weather;
 import android.coolweather.com.coolweather.util.HttpUtil;
 import android.coolweather.com.coolweather.util.Utility;
 import android.os.Bundle;
@@ -76,12 +77,19 @@ public class ChooseAreaFragment extends Fragment {
                 } else if (currentLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(position);
                     queryCounties();
-                }else if (currentLevel==LEVEL_COUNTY){
-                    String weatherId=countyList.get(position).getWeatherId();
-                    Intent intent=new Intent(getContext(),WeatherActivity.class);
-                    intent.putExtra("weather_id",weatherId);
-                    startActivity(intent);
-                    getActivity().finish();
+                } else if (currentLevel == LEVEL_COUNTY) {
+                    String weatherId = countyList.get(position).getWeatherId();
+                    if (getActivity() instanceof MainActivity) {
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                        intent.putExtra("weather_id", weatherId);
+                        startActivity(intent);
+                        getActivity().finish();
+                    } else if (getActivity() instanceof WeatherActivity) {
+                        WeatherActivity activity= (WeatherActivity) getActivity();
+                        activity.drawerLayout.closeDrawers();
+                        activity.swipeRefresh.setRefreshing(true);
+                        activity.requestWeather(weatherId);
+                    }
                 }
             }
         });
@@ -174,24 +182,24 @@ public class ChooseAreaFragment extends Fragment {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 String responseText = response.body().string();
-                boolean result=false;
-                if ("province".equals(type)){
-                    result= Utility.handleProvinceRespose(responseText);
-                }else if ("city".equals(type)){
-                    result=Utility.handleCityRespose(responseText,selectedProvince.getId());
-                }else if ("county".equals(type)){
-                    result=Utility.handleCountyRespose(responseText,selectedCity.getId());
+                boolean result = false;
+                if ("province".equals(type)) {
+                    result = Utility.handleProvinceRespose(responseText);
+                } else if ("city".equals(type)) {
+                    result = Utility.handleCityRespose(responseText, selectedProvince.getId());
+                } else if ("county".equals(type)) {
+                    result = Utility.handleCountyRespose(responseText, selectedCity.getId());
                 }
-                if (result){
+                if (result) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             closeProgressDialog();
-                            if ("province".equals(type)){
+                            if ("province".equals(type)) {
                                 queryProvince();
-                            }else if ("city".equals(type)){
+                            } else if ("city".equals(type)) {
                                 queryCities();
-                            }else if ("county".equals(type)){
+                            } else if ("county".equals(type)) {
                                 queryCounties();
                             }
                         }
@@ -202,15 +210,15 @@ public class ChooseAreaFragment extends Fragment {
     }
 
     private void closeProgressDialog() {
-        if (progressDialog!=null){
+        if (progressDialog != null) {
             progressDialog.dismiss();
         }
 
     }
 
     private void showProgressDialog() {
-        if (progressDialog==null){
-            progressDialog=new ProgressDialog(getActivity());
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(getActivity());
             progressDialog.setMessage("西楚曹长卿帮你加载。。。。");
             progressDialog.setCanceledOnTouchOutside(false);
         }
